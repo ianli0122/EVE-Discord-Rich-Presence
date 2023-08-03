@@ -1,27 +1,31 @@
 #Imports
 from pypresence import Presence
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 import time
 import psutil
 import json
-import pytz
 import os
 
 '''
 Functions
 '''
 def logging(message, type): #Logging
-    log = datetime.now(pytz.timezone('utc')).strftime('%m/%d/%Y %H:%M:%S') + ': [' + type + '] ' + message
+    debugLogTime = datetime.utcfromtimestamp(timeLaunched).strftime('%m%d%Y %H%M%S')
+
+    log = datetime.now(timezone.utc).strftime('%m/%d/%Y %H:%M:%S') + f': [{type}] {message}'
+    with open(f'{os.getcwd()}/logs/{debugLogTime}.txt', 'w') as debugLog:
+        debugLog.write(log + '\n')
     print(log)
-    debugLog.write(log + '\n')
 
 def getTime(): #Get Current Time
-    return datetime.now(pytz.timezone('utc'))
+    return datetime.now(timezone.utc)
 
 def checkRunning(): #Check if EVE and Discord are Running
-    discord = "Discord.exe" in (p.name() for p in psutil.process_iter())
-    eve = "exefile.exe" in (p.name() for p in psutil.process_iter())
+    processNames = [p.name() for p in psutil.process_iter()]
+    discord = "Discord" in processNames or "Discord.exe" in processNames
+    eve = "exefile" in processNames or "exefile.exe" in processNames
+
     if discord and eve:
         return True
     elif discord and not(eve):
@@ -79,12 +83,9 @@ def updateLog(): #Updates logContent
     lastContent = logContent
     logContent = []
     
-    log = open(logDir, 'r')
-
-    for x in log:
-        logContent.append(x)
-
-    log.close()
+    with open(logDir, 'r') as log:
+        for x in log:
+            logContent.append(x)
 
     if logContent == lastContent:
         update = False
@@ -94,23 +95,23 @@ def updateLog(): #Updates logContent
     logging('Log updated', 'NOTICE')
     return len(logContent)
 
-def updateDiscord():
+def updateDiscord(): #Updates Discord Rich Presence
     global timeUpdated, timeLaunched, inCombat, inMining, system, systemUpdate
 
-    if int(time.time()) - timeUpdated >= 120:
+    if int(time.time()) - timeUpdated >= 120 and (inCombat or inMining):
         presence.update(details = currentCharacter(), state = 'In ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
         logging('Discord Updated to Neutral', 'UPDATE')
         inCombat = False
         inMining = False
 
-    if systemUpdate:
+    if systemUpdate and not(inCombat):
         presence.update(details = currentCharacter(), state = 'In ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
         logging('Discord Updated System to ' + system, 'UPDATE')
         systemUpdate = False
-    elif inCombat:
+    elif inCombat and update:
         presence.update(details = currentCharacter(), state = 'In Combat', start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
         logging('Discord Updated to \'In Combat\'', 'UPDATE')
-    elif inMining:
+    elif inMining and update:
         presence.update(details = currentCharacter(), state = 'Mining in ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
         logging('Discord Updated to \'Mining\'', 'UPDATE')
     
@@ -129,9 +130,6 @@ def shutdown():
         logging('Discord Presence Closed', 'SHUTDOWN')
     except:
         logging('Discord Shutdown Error', 'WARN')
-
-    logging('Log Stopping', 'SHUTDOWN')
-    debugLog.close()
     sys.exit()
 
 #Load Config
@@ -148,8 +146,15 @@ systemUpdate = False
 system = config['lastSystem']
 
 #Log
-logsDir = config['user']
-logsDir = os.path.join("C:", os.sep, "Users", logsDir, "Documents", "EVE", "logs", "Gamelogs")
+homeDir = os.path.expanduser('~')
+if os.name == 'nt':
+    logsDir = homeDir.replace('\\', '/')
+    logsDir += '/Documents/EVE/logs/Gamelogs'
+elif os.name == 'posix':
+    logsDir = homeDir + '/Documents/EVE/logs/Gamelogs'
+    if not(os.path.exists(logsDir)):
+        logsDir = homeDir + '/.local/share/Steam/steamapps/compatdata/8500/pfx/drive_c/users/steamuser/My Documents/EVE/logs/Gamelogs'
+
 logList = []
 logContent = []
 lastLine = 0
@@ -157,7 +162,6 @@ currentLine = 0
 
 #Misc
 update = True #If New Text was Detected
-debugLog = open(os.getcwd() + '\\logs\\'+ getTime().strftime('%m%d%Y %H%M%S') + '.txt', 'w') #Start Debug Log File
 timeLaunched = int(time.time())
 timeUpdated = int(time.time())
 alliancePic = config['alliance']
@@ -187,15 +191,13 @@ while checkRunning():
         for file in os.listdir(logsDir): #Get List of Logs
             if file.endswith(".txt"):
                 logList.append(file)
-        logDir = os.path.join(logsDir, logList[-1])
+        logDir = f"{logsDir}/{logList[-1]}"
         logging('Log is: ' + logDir, 'STARTUP')
-        log = open(logDir, "r") #Open Most Recent Log
-        logging('Log Opened', 'STARTUP')
 
-        for x in log: #Add Every Line to logContent
-            logContent.append(x)
-        log.close()
-        logging('Log Closed', 'STARTUP')
+        with open(logDir, 'r') as log:
+            logging('Log Opened', 'STARTUP')
+            for x in log:
+                logContent.append(x)
         logging('Initial Log Analyzed', 'STARTUP')
 
         logging('Active Character is: ' + currentCharacter(), 'STARTUP')

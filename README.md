@@ -3,8 +3,8 @@
 Python Script for displaying EVE Discord Rich Presence
 
 ## Requirements
-- Windows only :Sadge:
-- Python (3.10)
+- OS: Windows or Linux
+- Python (3.10 or above)
 
 ## Features
 - [X]  Character Detection
@@ -23,7 +23,7 @@ Python Script for displaying EVE Discord Rich Presence
 
 ## Installation
 1. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
-2. Install the required libraries using `pip install -r requirements.txt` inside the program folder
+2. Install the required libraries using `pip install -r requirements.txt` inside the  folder
 3. Edit **config.json**
 ```
 {

@@ -1,3 +1,2 @@
 pypresence
 psutil
-pytz
