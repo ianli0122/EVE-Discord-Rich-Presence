@@ -188,7 +188,7 @@ while checkRunning():
     if initalConfig:
         logging('EVE and Discord Detected', 'NOTICE')
 
-        for file in os.listdir(logsDir): #Get List of Logs
+        for file in sorted(os.listdir(logsDir)): #Get List of Logs
             if file.endswith(".txt"):
                 logList.append(file)
         logDir = f"{logsDir}/{logList[-1]}"
