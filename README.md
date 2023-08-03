@@ -27,7 +27,6 @@ Python Script for displaying EVE Discord Rich Presence
 3. Edit **config.json**
 ```
 {
-    "user": "{Insert Username}",
     "lastSystem": "{Insert Last System}",
     "alliance": "{Insert Alliance (See Below)}",
     "delay": 15
