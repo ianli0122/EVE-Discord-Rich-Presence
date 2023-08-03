@@ -55,4 +55,4 @@ When EVE or Discord is closed, the script will detect it and shutdown automatica
 |Silent Company|silent_company|
 |The Initiative|the_initiative|
 |WE FORM BL0B|we_form_bl0b|
-|WE FORM V0LTA|we_form_v0lta\
+|WE FORM V0LTA|we_form_v0lta|
