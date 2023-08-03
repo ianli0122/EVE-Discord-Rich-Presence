@@ -2,6 +2,10 @@
 
 Python Script for displaying EVE Discord Rich Presence
 
+## Requirements
+- Windows only :Sadge:
+- Python (3.10)
+
 ## Features
 - [X]  Character Detection
 - [X]  Corporation Config
@@ -10,6 +14,7 @@ Python Script for displaying EVE Discord Rich Presence
 - [X]  Automatic Shutdown
 - [ ]  Game/Log Startup Detection
 - [ ]  Pull Character Information from EVE API
+- [ ] Cross Platform
 
 ## Screenshots
 ![Discord](screenshots/discord.png)
