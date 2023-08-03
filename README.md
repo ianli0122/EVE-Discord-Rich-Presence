@@ -18,16 +18,17 @@ Python Script for displaying EVE Discord Rich Presence
 
 ## Installation
 1. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
-2. Edit **config.json**
+2. Install the required libraries using `pip install -r requirements.txt` inside the program folder
+3. Edit **config.json**
 ```
 {
     "user": "{Insert Username}",
     "lastSystem": "{Insert Last System}",
     "alliance": "{Insert Alliance (See Below)}",
-    "delay": {Delay Time in Seconds}
+    "delay": 15
 }
 ```
-(Recommended delay time is 15)
+(Recommended delay time is 15 seconds)
 
 ## Usage
 1. Launch Discord and EVE
@@ -54,4 +55,4 @@ When EVE or Discord is closed, the script will detect it and shutdown automatica
 |Silent Company|silent_company|
 |The Initiative|the_initiative|
 |WE FORM BL0B|we_form_bl0b|
-|WE FORM V0LTA|we_form_v0lta\
+|WE FORM V0LTA|we_form_v0lta|
