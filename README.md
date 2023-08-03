@@ -17,8 +17,8 @@ Python Script for displaying EVE Discord Rich Presence
 ![Logs](screenshots/logs.png)
 
 ## Installation
-1. Install the required libraries using `pip install -r requirements.txt` inside the program folder
-2. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
+1. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
+2. Install the required libraries using `pip install -r requirements.txt` inside the program folder
 3. Edit **config.json**
 ```
 {
