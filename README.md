@@ -17,17 +17,18 @@ Python Script for displaying EVE Discord Rich Presence
 ![Logs](screenshots/logs.png)
 
 ## Installation
-1. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
-2. Edit **config.json**
+1. Install the required libraries using `pip install -r requirements.txt` inside the program folder
+2. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
+3. Edit **config.json**
 ```
 {
     "user": "{Insert Username}",
     "lastSystem": "{Insert Last System}",
     "alliance": "{Insert Alliance (See Below)}",
-    "delay": {Delay Time in Seconds}
+    "delay": 15
 }
 ```
-(Recommended delay time is 15)
+(Recommended delay time is 15 seconds)
 
 ## Usage
 1. Launch Discord and EVE
