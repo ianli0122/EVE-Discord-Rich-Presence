@@ -12,9 +12,16 @@ Python Script for displaying EVE Discord Rich Presence
 - [X]  Mining and Combat Detection
 - [X]  System Detection
 - [X]  Automatic Shutdown
-- [ ]  Game/Log Startup Detection
-- [ ]  Pull Character Information from EVE API
-- [ ] Cross Platform
+- []  Game/Log Startup Detection
+- [X]  Pull Character Information from EVE API
+- [X] Cross Platform
+
+## Limitations
+- Not extensively tested
+- Unable to launch EVE instances not on Steam
+- Slow refresh (15s)
+- Limited alliance selection
+    - Alliance will be one of the four races if not availiable
 
 ## Screenshots
 ![Discord](screenshots/discord.png)
@@ -23,40 +30,35 @@ Python Script for displaying EVE Discord Rich Presence
 
 ## Installation
 1. Download the [**Newest Release**](https://github.com/ianli0122/EVE-Discord-Rich-Presence/releases)
-2. Install the required libraries using `pip install -r requirements.txt` inside the  folder
+2. Install the required libraries using `pip install -r requirements.txt` inside the folder
 3. Edit **config.json**
 ```
 {
-    "lastSystem": "{Insert Last System}",
-    "alliance": "{Insert Alliance (See Below)}",
+    "characterName": {IGN},
+    "lastSystem": {Current System},
     "delay": 15
 }
 ```
 (Recommended delay time is 15 seconds)
 
 ## Usage
-1. Launch Discord and EVE
-2. Fully log in on EVE and select your character
-3. Launch the script and enjoy!
+1. Launch Discord
+2. Run the script
 
 When EVE or Discord is closed, the script will detect it and shutdown automatically.
 
 ## Availiable Alliances
-|Alliances|ID|
-|-------|-------|
-|Amarr|amarr|
-|Caldari|caldari|
-|Gallente|gallente|
-|Minmatar|minmatar|
-|Azure Citizen|azure_citizen|
-|Brave Collective|brave_collective|
-|Brave United|brave_united|
-|Dracarys|dracarys|
-|Fraternity|fraternity|
-|Fraternity University|fraternity_university|
-|Goonswarm Federation|goonswarm_federation|
-|Pandemic Horde|pandemic_horde|
-|Silent Company|silent_company|
-|The Initiative|the_initiative|
-|WE FORM BL0B|we_form_bl0b|
-|WE FORM V0LTA|we_form_v0lta|
+|Alliances|
+|-------|
+|Azure Citizen|
+|Brave Collective|
+|Brave United|
+|Dracarys|
+|Fraternity.|
+|Fraternity University|
+|Goonswarm Federation|
+|Pandemic Horde|
+|Silent Company|
+|The Initiative|
+|WE FORM BL0B|
+|WE FORM V0LTA|

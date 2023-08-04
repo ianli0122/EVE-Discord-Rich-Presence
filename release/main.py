@@ -2,6 +2,8 @@
 from pypresence import Presence
 from datetime import datetime, timezone
 import sys
+import requests
+import webbrowser
 import time
 import psutil
 import json
@@ -13,13 +15,11 @@ Functions
 def logging(message, type): #Logging
     debugLogTime = datetime.utcfromtimestamp(timeLaunched).strftime('%m%d%Y %H%M%S')
 
-    log = datetime.now(timezone.utc).strftime('%m/%d/%Y %H:%M:%S') + f': [{type}] {message}'
-    with open(f'{os.getcwd()}/logs/{debugLogTime}.txt', 'w') as debugLog:
-        debugLog.write(log + '\n')
-    print(log)
-
-def getTime(): #Get Current Time
-    return datetime.now(timezone.utc)
+    logMessage = datetime.now(timezone.utc).strftime('%m/%d/%Y %H:%M:%S') + f': [{type.upper()}] {message}'
+    
+    with open(f'{os.getcwd()}/logs/{debugLogTime}.txt', 'a') as debugLog:
+        debugLog.write(f"{logMessage}\n")
+    print(logMessage)
 
 def checkRunning(): #Check if EVE and Discord are Running
     processNames = [p.name() for p in psutil.process_iter()]
@@ -29,18 +29,56 @@ def checkRunning(): #Check if EVE and Discord are Running
     if discord and eve:
         return True
     elif discord and not(eve):
-        logging('EVE not detected', 'WARN')        
+        logging('EVE not detected', 'warn')        
         return False
     elif not(discord) and eve:
-        logging('Discord not detected', 'WARN')        
+        logging('Discord not detected', 'warn')        
         return False
     else:
-        logging('EVE and Discord not detected', 'WARN')        
+        logging('EVE and Discord not detected', 'warn')        
         return False
 
-def currentCharacter(): #Gets Name of Current Character
-    out = logContent[2][12:].replace('\n', "")
-    return out
+def getAlliance(): #Get Aliiance Name from EVE API
+    global id, allianceID, allianceName
+    headers = {
+        'accept': "application/json",
+        "Accept-Language": "en",
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache"
+    }
+    bloodlineIds = {
+        "Amarr": [5, 6, 13],
+        "Caldari": [1, 11, 2],
+        "Gallente": [7, 8, 12],
+        "Minmatar": [4, 3, 14]
+    }
+    supportedAlliances = ['Azure Citizen', 'Brave Collective', 'Brave United', 'Dracarys', 'Fraternity', 'Fraternity University', 'Goonswarm Federation', 'Pandemic Horde', 'Silent Company', 'The Initiative', 'WE FORM BL0B', 'WE FORM V0LTA']
+    try:
+        id = requests.post("https://esi.evetech.net/latest/universe/ids/?datasource=tranquility&language=en", headers = headers, data = f"[\"{characterName}\"]").json()['characters'][0]['id']
+        logging(f'Character ID is {id}', 'startup')
+    except:
+        logging('No character found', 'critical')
+        shutdown()
+
+    try:
+        allianceID = requests.get(f"https://esi.evetech.net/latest/characters/{id}/?datasource=tranquility").json()['alliance_id']
+        allianceName = requests.get(f"https://esi.evetech.net/latest/alliances/{allianceID}/?datasource=tranquility").json()['name']
+        logging(f'Character alliance is {allianceName}', 'startup')
+        
+        allianceName = allianceName.replace('.', "")
+        if allianceName not in supportedAlliances:
+            allianceID = requests.get(f"https://esi.evetech.net/latest/characters/{id}/?datasource=tranquility").json()['bloodline_id']
+            for key, value in bloodlineIds.items():
+                if allianceID in value:
+                    allianceName = key
+            logging(f'Alliance not supported, reverting to {allianceName}', 'startup')
+            
+    except KeyError:
+        allianceID = requests.get(f"https://esi.evetech.net/latest/characters/{id}/?datasource=tranquility").json()['bloodline_id']
+        for key, value in bloodlineIds.items():
+            if allianceID in value:
+                allianceName = key
+        logging(f'No alliance found, character alliance is now: {allianceName}', 'startup')
 
 def updateActivity(line): #Parses and Detects Activity Type
     global inCombat, inMining, system, logContent, timeUpdated, systemUpdate
@@ -53,9 +91,9 @@ def updateActivity(line): #Parses and Detects Activity Type
         try:
             for x in range(lineTxt.index('(') + 1, lineTxt.index(')')):
                 activity = activity + lineTxt[x]
-            logging('Message Detected: ' + activity, 'UPDATE')
+            logging('Message detected: ' + activity, 'update')
         except ValueError:
-            logging('No Activity Type', 'WARN')
+            logging('No activity type', 'warn')
             return 0
     
     match activity:
@@ -63,19 +101,19 @@ def updateActivity(line): #Parses and Detects Activity Type
             startPos = lineTxt.index(' to ') + 4
             system = lineTxt[startPos:].replace('\n', "")
             systemUpdate = True
-            logging('System is now: ' + system, 'UPDATE')
+            logging('System is now: ' + system, 'update')
         case 'combat':
             inCombat = True
             inMining = False
             timeUpdated = int(time.time())
-            logging('isCombat', 'UPDATE')
+            logging('inCombat', 'update')
         case 'mining':
             inMining = True
-            inCombat = False
-            timeUpdated = int(time.time())
-            logging('isMining', 'UPDATE')
+            if not(inCombat):
+                timeUpdated = int(time.time())
+            logging('inMining', 'update')
         case _:
-            logging('Activity not found', 'WARN')
+            logging('Activity not found', 'warn')
 
 
 def updateLog(): #Updates logContent
@@ -92,28 +130,28 @@ def updateLog(): #Updates logContent
     else:
         update = True
 
-    logging('Log updated', 'NOTICE')
+    logging('Log updated', 'notice')
     return len(logContent)
 
 def updateDiscord(): #Updates Discord Rich Presence
     global timeUpdated, timeLaunched, inCombat, inMining, system, systemUpdate
 
     if int(time.time()) - timeUpdated >= 120 and (inCombat or inMining):
-        presence.update(details = currentCharacter(), state = 'In ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
-        logging('Discord Updated to Neutral', 'UPDATE')
+        presence.update(details = characterName, state = 'In ' + system, start = timeEVELaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
+        logging('Discord updated to neutral', 'update')
         inCombat = False
         inMining = False
 
     if systemUpdate and not(inCombat):
-        presence.update(details = currentCharacter(), state = 'In ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
-        logging('Discord Updated System to ' + system, 'UPDATE')
+        presence.update(details = characterName, state = 'In ' + system, start = timeEVELaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
+        logging('Discord updated system to ' + system, 'update')
         systemUpdate = False
     elif inCombat and update:
-        presence.update(details = currentCharacter(), state = 'In Combat', start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
-        logging('Discord Updated to \'In Combat\'', 'UPDATE')
-    elif inMining and update:
-        presence.update(details = currentCharacter(), state = 'Mining in ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
-        logging('Discord Updated to \'Mining\'', 'UPDATE')
+        presence.update(details = characterName, state = 'In Combat', start = timeEVELaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
+        logging('Discord updated to \'In Combat\'', 'update')
+    elif inMining and update and not(inCombat):
+        presence.update(details = characterName, state = 'Mining in ' + system, start = timeEVELaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
+        logging('Discord updated to \'Mining\'', 'update')
     
 
 def shutdown():
@@ -123,22 +161,28 @@ def shutdown():
     os.remove('config.json')
     with open('config.json', 'w') as f:
         json.dump(config, f, indent=4)
-    logging('Updated config.json', 'SHUTDOWN')
+    logging('Updated config.json', 'shutdown')
 
     try:
         presence.close()
-        logging('Discord Presence Closed', 'SHUTDOWN')
+        logging('Discord presence closed', 'shutdown')
     except:
-        logging('Discord Shutdown Error', 'WARN')
+        logging('Discord presence closed', 'shutdown')
     sys.exit()
 
-#Load Config
-with open('config.json', 'r+') as x:
-    config = json.load(x)
 
-'''
-Variable Initialization
-'''
+timeLaunched = int(time.time())
+logging('Program start', 'startup')
+
+#Load Config
+try:
+    with open('config.json', 'r+') as x:
+        config = json.load(x)
+except:
+    logging('config.json not detected', 'critical')
+    shutdown()
+logging('config.json loaded', 'startup')
+
 #Current Activity
 inCombat = False
 inMining = False
@@ -147,68 +191,105 @@ system = config['lastSystem']
 
 #Log
 homeDir = os.path.expanduser('~')
-if os.name == 'nt':
+osName = os.name
+logging(f'OS is {osName}', 'startup')
+if osName == 'nt':
     logsDir = homeDir.replace('\\', '/')
     logsDir += '/Documents/EVE/logs/Gamelogs'
-elif os.name == 'posix':
+elif osName == 'posix':
     logsDir = homeDir + '/Documents/EVE/logs/Gamelogs'
     if not(os.path.exists(logsDir)):
         logsDir = homeDir + '/.local/share/Steam/steamapps/compatdata/8500/pfx/drive_c/users/steamuser/My Documents/EVE/logs/Gamelogs'
 
+if not(os.path.exists(logsDir)):
+    logging('Game logs not found', 'critical')
+    shutdown()
+
+logging(f'Gamelogs in {logsDir}', 'startup')
+logDir = ''
 logList = []
 logContent = []
 lastLine = 0
 currentLine = 0
 
 #Misc
-update = True #If New Text was Detected
-timeLaunched = int(time.time())
+update = False
+timeEVELaunched = 0
 timeUpdated = int(time.time())
-alliancePic = config['alliance']
-allianceName = config['alliance'].replace('_', " ").title()
 initalConfig = True
 
 #Discord
 clientID = '1136144163868508262'
 presence = Presence(clientID)
 
+#Character Info
+characterName = config['characterName']
+logging('Active character is: ' + characterName, 'startup')
+id = 0
+allianceID = 0
+allianceName = ''
+getAlliance()
+alliancePic = allianceName.lower().replace(' ', '_')
 
-'''
-Program
-'''
-logging('Program Start', 'STARTUP')
-
-try:
+try: #Connect to Discord
     presence.connect()
 except:
-    logging('Discord Connection Error', 'WARN')
+    logging('Discord connection error (Discord might not be running)', 'critical')
     shutdown()
+
+logging('Opening EVE Launcher through Steam', 'startup')
+webbrowser.open('steam://rungameid/8500') #Open EVE Launcher
+for file in sorted(os.listdir(logsDir)): #Take Initial Snapshot
+    if file.endswith('.txt'):
+        logList.append(file)
+logging('Initial logs snapshot taken', 'startup')
+
+while True:
+    if checkRunning() and initalConfig:
+        logging('EVE detected', 'startup')
+        while True:
+            logSnapshot = logList
+            logList = []
+
+            for file in sorted(os.listdir(logsDir)):
+                if file.endswith('.txt'):
+                    logList.append(file)
+
+            for x in logList:
+                if x not in logSnapshot:
+                    logging(f'New log found: {x}', 'update')
+                    if x[16:] == str(id) + '.txt':
+                        logging('Log matched to character ID, continuing startup', 'update')
+                        logDir = f"{logsDir}/{x}"
+                        timeEVELaunched = int(time.time())
+                        break
+            
+            if logDir != '':
+                break
+
+            logging('Character not connected', 'warn')
+            time.sleep(config['delay'])
+    if logDir != '':
+        break
+    time.sleep(config['delay'])
+
 
 while checkRunning():
     if initalConfig:
-        logging('EVE and Discord Detected', 'NOTICE')
-
-        for file in sorted(os.listdir(logsDir)): #Get List of Logs
-            if file.endswith(".txt"):
-                logList.append(file)
-        logDir = f"{logsDir}/{logList[-1]}"
-        logging('Log is: ' + logDir, 'STARTUP')
-
+        logging('Log is: ' + logDir, 'startup')
         with open(logDir, 'r') as log:
-            logging('Log Opened', 'STARTUP')
+            logging('Log Opened', 'startup')
             for x in log:
                 logContent.append(x)
-        logging('Initial Log Analyzed', 'STARTUP')
+        logging('Initial log analyzed', 'startup')
 
-        logging('Active Character is: ' + currentCharacter(), 'STARTUP')
-
-        presence.update(details = currentCharacter(), state = 'In ' + system, start = timeLaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
-        logging('Discord Rich Presence Started', 'STARTUP')
+        presence.update(details = characterName, state = 'In ' + system, start = timeEVELaunched, large_image = 'eveonline', large_text = 'EVE Online', small_image = alliancePic, small_text = allianceName)
+        logging('Discord rich presence started', 'startup')
 
         lastLine = len(logContent)
         initalConfig = False
 
-        logging('Inital Startup Complete', 'STARTUP')
+        logging('Startup complete', 'startup')
 
     currentLine = updateLog()
     if update:
@@ -218,7 +299,7 @@ while checkRunning():
         updateDiscord()
     else:
         updateDiscord()
-        logging('No change detected', 'NOTICE')
+        logging('No change detected', 'notice')
     time.sleep(config['delay'])
 
 shutdown()
