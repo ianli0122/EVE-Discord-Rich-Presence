@@ -1,6 +1,6 @@
 # Changelog
 
-## Major Features
+## 1.1
 ### Linux Support
 - Scans for EVE and Discord processes without .exe
 - Scans for EVE log directory based on system os
@@ -10,12 +10,12 @@
     - Added "webbrowser" library
 - Waits until new log matching character ID appears, links to it
 
-## Bug Fixes
+### Bug Fixes
 - Bug: Discord would continue to update to default presence after >120 seconds since timeUpdated
 - Bug: Discord would continue to update combat and mining messages during the 120 seconds
 - Bug: Logging to txt file would only log one line
 
-## Others 
+### Others 
 - Removed pytz
     - Removed getTime() function
 - Used 'with' to close text files after every refresh/log

@@ -12,7 +12,7 @@ Python Script for displaying EVE Discord Rich Presence
 - [X]  Mining and Combat Detection
 - [X]  System Detection
 - [X]  Automatic Shutdown
-- []  Game/Log Startup Detection
+- [ ]  Game/Log Startup Detection
 - [X]  Pull Character Information from EVE API
 - [X] Cross Platform
 
