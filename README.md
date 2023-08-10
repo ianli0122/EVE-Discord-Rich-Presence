@@ -20,6 +20,7 @@ Python Script for displaying EVE Discord Rich Presence
 - Not extensively tested
 - Unable to launch EVE instances not on Steam
 - Slow refresh (15s)
+- No Ansiblex jump support
 - Limited alliance selection
     - Alliance will be one of the four races if not availiable
 
