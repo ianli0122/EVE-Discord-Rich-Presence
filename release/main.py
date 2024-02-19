@@ -1,3 +1,10 @@
+'''
+- Log updates
+- More alliances
+- Switch to local chat for system detection
+'''
+
+
 #Imports
 from pypresence import Presence
 from datetime import datetime, timezone

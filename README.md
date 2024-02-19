@@ -1,5 +1,7 @@
 # EVE-Discord-Rich-Presence
 
+**Note: I am not playing EVE Online anymore. Much of this code was written in 2023, not sure if it'll still work. Feel free to fork and fix stuff if it breaks.**
+
 Python Script for displaying EVE Discord Rich Presence
 
 ## Requirements
@@ -12,7 +14,7 @@ Python Script for displaying EVE Discord Rich Presence
 - [X]  Mining and Combat Detection
 - [X]  System Detection
 - [X]  Automatic Shutdown
-- [ ]  Game/Log Startup Detection
+- [X]  Game/Log Startup Detection
 - [X]  Pull Character Information from EVE API
 - [X] Cross Platform
 
